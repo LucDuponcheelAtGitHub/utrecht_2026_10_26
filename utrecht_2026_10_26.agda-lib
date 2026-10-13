@@ -1,0 +1,4 @@
+
+name: utrecht_2026_10_26
+include: src
+depend: standard-library agda-categories cubical
