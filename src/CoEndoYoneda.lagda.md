@@ -2,7 +2,7 @@
 
 CoYoneda related theorems and proofs deal with `SET`-valued functors of type `Functor C (SET ℓ)`
 that, given an object `Z`, map an object `Y` to `Hom[ Z , Y ]`, the set of homomorphisms from `Z` to
-`Y`, and map an homomorphism `z2y` to `Hom[ Z , Y ] → Hom[ Z , X ]`, the function composing `z2y`
+`Y`, and map an homomorphism `y2x` to `Hom[ Z , Y ] → Hom[ Z , X ]`, the function composing `z2y`
 with `y2x`.
 
 Notice that I am dealing with **Co***Yoneda* related stuff, but I might as well have been dealing
@@ -18,15 +18,12 @@ What if a functor of type `Functor (SET ℓ) C` exists as well? Such a functor m
 homomorphisms, as in `PSBP`, where functions can be used as programs. 
 
 In that case `SET`-valued functors of type `Functor C (SET ℓ)` can be composed with that functor of
-type `Functor (SET ℓ) C`, obtaining an endofunctor of type `Functor C C` 
-(and `SET ℓ` suddenly disappears (!)).
+type `Functor (SET ℓ) C`, obtaining an endofunctor of type `Functor C C`.
 
 *Are there any pointfree* *Co**Endo**Yoneda* *theorems that can be formulated and proved?*
 
-It turns out that this is possible for categories for which there exists a functor as above and for
+It turns out that this is possible for categories for which there exist a functor as above and for
 which there also exist some simple extra `field`s and laws.
-
-... notice that *simple* is not the same as *easy* ...
 
 *So I was wondering (having pointfree functional programming in mind)*
 
@@ -35,9 +32,9 @@ which there also exist some simple extra `field`s and laws.
 **I am deeply convinced that the best theory comes from practice.**
 
 But, this time, I was way to curious about theory before thinking about practice. Of course, I hoped
-that the theory could, somehow, be used for, *at least, some* class of computation-valued functions,
-but no, it turned out that one of the extra `field`s with its law implied that the theory can only
-be used for pure functions. 
+that the theory could, somehow, be used for, *at least, some* class of effectful functions,but no,
+it turned out that one of the extra `field`s and one of its laws implied that the theory can only be
+used for pure functions. 
 
 So far for the bad news. But here is the good news.
 
@@ -54,29 +51,33 @@ It was **not** Johan Cruyff.
 
 <br>
 
-My extra constraint turned out, for computation-valued functions, to be *equivalent* with the
-pureness of the computation involved. 
+My extra constraint turned out, for computation-valued functions, and a functor of type
+`Functor (SET ℓ) C` being the identity on objects, cfr. `PSBP` implementation, to be *equivalent*
+with the pureness of the computation involved. 
 
 *So what is the big deal then?*
 
-My formulation is a pointfree formulation of pureness of computation-valued function implementations
-of homomorphisms in a simple way. 
+My formulation is an
+*(easy) low-profile pointfree specification level formulation of pureness* of
+computation-valued function implementations as above. Perhaps the simplest one.
 
-I am aware that there exist "high-tech categorical" pointfree formulations of pureness, but they are
-all beyond the scope of this presentation (and, frankly, beyond my capabilities). 
+I am aware that there exist
+*(difficult) high-profile categorical pointfree formulations of pureness*,
+but they are all beyond the scope of this presentation, and, frankly, for now, beyond my
+capabilities. 
 
 For information about *pointful* ways to formulate pureness, see, for example,
 [idempotent monad in nLab](https://ncatlab.org/nlab/show/idempotent+monad).
 
 It has a link to a book of Francis Borceux, from Belgium. By the way, the book was given to me by
 Graham Hutton when I worked here in Utrecht with him, Erik Meyer and, of course, also Doaitse
-Swierstra (our (so much more than a) boss). Graham estimated that I was better able to read that
+Swierstra (our, *so much more than a*, boss). Graham estimated that I was better able to read that
 book than he was (which wasn't entirely true, but anyway).
 
 By now you probably have noticed that "pointfree closed component compositionality" is one of my
 favorite topics.
 
-### `import`s
+### Standard `import`s
 
 We need to `import` some artifacts from the standard Agda and Cubical Agda libraries. 
 
@@ -92,19 +93,12 @@ open import Cubical.Data.Sigma
 open import Cubical.Data.Unit
 ```
 
-## Bijection
+## Isomorphism
 
-We encode a bijection as two functions, `from` and `to`, that are each other's inverses.
-
-I have to double-check if I cannot use a standard library `record`.
+We use the standard `Iso` record from `Cubical.Foundations.Isomorphism` to encode isomorphisms between types.
 
 ```agda
-record _⇿_ {ℓ ℓ' : Level} (Z : Type ℓ) (Y : Type ℓ') : Type (ℓ ⊔ ℓ') where
-  field
-    to : Z → Y
-    from : Y → Z
-    to_from : ∀ z → to (from z) ≡ z
-    from_to : ∀ y → from (to y) ≡ y
+open import Cubical.Foundations.Isomorphism using (Iso)
 ```
 
 ## Basic Functional Category
@@ -248,16 +242,16 @@ Given an object `Z` and a `SET`-valued functor `F`, natural transformations of t
 `NatTrans (CYF Z) F` are in one-to-one correspondence with objects of type
 `F.F-ob Z`.
 
-Here it is
+Here is  our CoEndoYoneda theorem.
 
 Given an object `Z` and an endofunctor `EF`, natural transformations of type
 `NatTrans (CYEF Z) (G ∘F EF)` are in one-to-one
 correspondence with objects of type `(CYF ∘F (G ∘F EF)).F-ob Z`.
 
-## CoEndoYoneda Bijection
+## CoEndoYoneda Iso
 
 ```agda
-record CoEndoYonedaBijection
+record CoEndoYonedaIso
     {ℓ : Level}
     (C : Category (lsuc ℓ) ℓ)
     (FF : Functor (SET ℓ) C) : Type (lsuc ℓ) where
@@ -274,7 +268,7 @@ record CoEndoYonedaBijection
     fc : FunctionalCategory C FF
   open FunctionalCategory fc
 
-  module CoEndoEquivalenceBijection {EF : Functor C C} {Z : ob} where
+  module CoEndoEquivalenceIso {EF : Functor C C} {Z : ob} where
     private
       module EF = Functor EF
       module CYEF = Functor (CYEF Z)
@@ -343,12 +337,12 @@ record CoEndoYonedaBijection
           (fz ⋆ G∘EF.F-hom z2y) ⋆ G∘EF.F-hom y2x
             ∎
 
-        fz→ax→z2x→fft2gefx : 
+        fz→∀x→z2x→fft2gefx : 
             fst (CYF∘G∘EF.F-ob Z)
           → ∀ X 
           → Hom[ Z , X ] 
           → Hom[ FF.F-ob T , G∘EF.F-ob X ]
-        fz→ax→z2x→fft2gefx fz X = λ z2x → fz ⋆ G∘EF.F-hom z2x
+        fz→∀x→z2x→fft2gefx fz X = λ z2x → fz ⋆ G∘EF.F-hom z2x
 
         fz→τz_commute : 
           ∀ (fz : fst (CYF∘G∘EF.F-ob Z)) {Y X : ob} (y2x : Hom[ Y , X ])
@@ -357,7 +351,7 @@ record CoEndoYonedaBijection
         fz→τz_commute fz {Y} {X} y2x =
           let
             cyefy2cyefx = CYEF.F-hom y2x
-            cyefx2ggefx = FF.F-hom (fz→ax→z2x→fft2gefx fz X)
+            cyefx2ggefx = FF.F-hom (fz→∀x→z2x→fft2gefx fz X)
             cyefy2ggefy = FF.F-hom (fz→ay→z2y→fft2gefy fz Y)
             ggefy2ggefx = FF.F-hom (λ fft2gefy → fft2gefy ⋆ G∘EF.F-hom y2x)
             
@@ -368,7 +362,7 @@ record CoEndoYonedaBijection
               ≡⟨ cong (λ k → k ⋆ N-ob μ (EF.F-ob X)) 
                   (sym 
                     (FF.F-seq (λ z2y → z2y ⋆ y2x) 
-                      (fz→ax→z2x→fft2gefx fz X))) ⟩
+                      (fz→∀x→z2x→fft2gefx fz X))) ⟩
               FF.F-hom (λ z2y → fz ⋆ G∘EF.F-hom (z2y ⋆ y2x))
             ⋆ N-ob μ (EF.F-ob X)
               ≡⟨ cong (λ k → k ⋆ N-ob μ (EF.F-ob X)) 
@@ -389,19 +383,20 @@ record CoEndoYonedaBijection
             (cyefy2ggefy ⋆ N-ob μ (EF.F-ob Y)) ⋆ G∘EF.F-hom  y2x
               ∎
 
-    coEndoYonedaBijection : NatTrans (CYEF Z) G∘EF ⇿ fst (CYF∘G∘EF.F-ob Z)
-    coEndoYonedaBijection = record
-      { to = τz→fz
-      ; from = fz→τz
-      ; to_from = to_from_proof
-      ; from_to = from_to_proof -- Notice : uses makeNatTransPath
+    coEndoYonedaIso : Iso (NatTrans (CYEF Z) G∘EF) (fst (CYF∘G∘EF.F-ob Z))
+    coEndoYonedaIso = record
+      { fun = τz→fz
+      ; inv = fz→τz
+      ; sec = to_from_proof
+      ; ret = from_to_proof -- Notice : uses makeNatTransPath
       }
 
       where
 
         to_from_proof : 
           ∀ (fz : fst (CYF∘G∘EF.F-ob Z))
-          → τz→fz (fz→τz fz) ≡ fz
+          →   τz→fz (fz→τz fz)
+            ≡ fz
         to_from_proof fz = 
           let
             cyefz2ggefz : Hom[ CYEF.F-ob Z , G∘G∘EF.F-ob Z ]
@@ -415,7 +410,7 @@ record CoEndoYonedaBijection
             g (fz ⋆ G∘EF.F-hom id) ⋆ N-ob μ (EF.F-ob Z)
               ≡⟨ cong (λ k → k ⋆ N-ob μ (EF.F-ob Z))
                   (cong FF.F-hom 
-                    (funExt (λ _ → to_from_proof_lemma1 fz))) ⟩
+                    (funExt (λ _ → to_from_proof_lemma fz))) ⟩
             g (fz ⋆ id) ⋆ N-ob μ (EF.F-ob Z)
               ≡⟨ cong (λ k → k ⋆ N-ob μ (EF.F-ob Z)) 
                   (cong FF.F-hom (funExt (λ _ → ⋆IdR fz))) ⟩
@@ -453,10 +448,10 @@ record CoEndoYonedaBijection
 
           where 
 
-            to_from_proof_lemma1 : 
+            to_from_proof_lemma : 
               ∀ (fz : fst (CYF∘G∘EF.F-ob Z))
               → fz ⋆ G∘EF.F-hom id ≡ fz ⋆ id
-            to_from_proof_lemma1 fz = 
+            to_from_proof_lemma fz = 
               fz ⋆ G∘EF.F-hom id
                 ≡⟨ cong (λ k → fz ⋆ k) G∘EF.F-id ⟩
               fz ⋆ id
@@ -527,22 +522,24 @@ record CoEndoYonedaBijection
 
         from_to_proof : 
           ∀ (τz : NatTrans (CYEF Z) G∘EF) 
-          → fz→τz (τz→fz τz) ≡ τz
+          →   fz→τz (τz→fz τz) 
+            ≡ τz
         from_to_proof τz = makeNatTransPath (funExt (from_to_proof' τz))
 ```
 
-### Connecting the CoEndoYoneda Bijection to `η` at `FF.F-ob T`
+### Connecting the CoEndoYoneda Iso to `η` at `FF.F-ob T`
 
-The `to` part of the CoEndoYoneda bijection maps, for `EF = Id`, the identity natural transformation 
-`idG` below to a morphism `ηFFT : Hom[ FF.F-ob T , G.F-ob (FF.F-ob T) ]`, that, assuming `η-eq-T`,
-coincides with `N-ob η (FF.F-ob T)`, the component of the monad unit `η` at `FF.F-ob T`.
+The `fun` part of the CoEndoYoneda isomorphism maps can, assuming `η-eq-T`, be used to recover
+`N-ob η (FF.F-ob T)`, the component of the "monad unit - like" `η` at `FF.F-ob T`, as a homomorphism
+`ηFFT : Hom[ FF.F-ob T , G.F-ob (FF.F-ob T) ]`. It uses `EF = Id` and it uses the identity natural
+transformation on `G`.
 
 ```agda
 module UniversalOriginOfEta
     {ℓ : Level}
     {C : Category (lsuc ℓ) ℓ}
     {FF : Functor (SET ℓ) C}
-    (cyeb : CoEndoYonedaBijection C FF) where
+    (cyei : CoEndoYonedaIso C FF) where
 
   private
     module C = Category C
@@ -550,20 +547,17 @@ module UniversalOriginOfEta
 
   open C
   open FF
-  open CoEndoYonedaBijection cyeb
+  open CoEndoYonedaIso cyei
   open FunctionalCategory fc
-  open CoEndoEquivalenceBijection {EF = Id} {Z = FF.F-ob T}
-
+  open CoEndoEquivalenceIso {EF = Id} {Z = FF.F-ob T}
+ 
   private
     module G = Functor G
-    module CYF∘G∘EF = Functor CYF∘G∘EF
 
   ηFFT : Hom[ FF.F-ob T , G.F-ob (FF.F-ob T) ]
-  ηFFT = _⇿_.to coEndoYonedaBijection idG
-
-    where
-
-      idG = record
+  ηFFT = 
+    Iso.fun coEndoYonedaIso 
+      record
         { N-ob = λ _ → id
         ; N-hom = λ f → 
             G.F-hom f ⋆ id
@@ -618,12 +612,12 @@ module SetFunctionalCategory {ℓ : Level} where
     ; idˡ = refl
     }
 
-  set-coendo-yoneda-bijection : CoEndoYonedaBijection (SET ℓ) Id
-  set-coendo-yoneda-bijection = record
+  set-coendo-yoneda-iso : CoEndoYonedaIso (SET ℓ) Id
+  set-coendo-yoneda-iso = record
     { fc = set-functional-category
     }
 
-  open UniversalOriginOfEta set-coendo-yoneda-bijection public
+  open UniversalOriginOfEta set-coendo-yoneda-iso public
 ```
 
 ## Purity
@@ -772,10 +766,12 @@ We define `Idempotent`, one of the many pointful characterizations of purity of 
   open Idempotent
 ```
 
-We also define `EnforcingPurity` which is, trivially, equivalent with `Idempotent`.
+Think about it as doing an effect twice is the sama as doing it once.
+
+We also define `IsPure` which is, trivially, equivalent with `Idempotent`.
 
 ```agda
-  record EnforcingPurity : Property where
+  record IsPure : Property where
     field
       enforcingPurity : 
         ∀ {Z : hSet ℓ} 
@@ -783,10 +779,10 @@ We also define `EnforcingPurity` which is, trivially, equivalent with `Idempoten
         →   mApply (mPure ∘ mPure) mz 
           ≡ mPure {M Z} mz
 
-  open EnforcingPurity
+  open IsPure
 
-  idempotent-equiv-enforcing-purity : Idempotent ⇔ EnforcingPurity 
-  idempotent-equiv-enforcing-purity = record 
+  idempotent-equiv-is-pure : Idempotent ⇔ IsPure 
+  idempotent-equiv-is-pure = record 
     { to = 
         λ i → record
           { enforcingPurity = λ mz →
@@ -830,16 +826,16 @@ of the monad involved and idempotency gives you back `η-eq` for free.
     ; isSetHom = λ {Z Y} → isSetΠ (λ _ → snd (M Y))
     }
 
-  KFF : Functor (SET ℓ) Kleisli
-  KFF = record
-    { F-ob = λ Z → Z
-    ; F-hom = λ z2y → (λ z → mPure (z2y z))
-    ; F-id = refl
-    ; F-seq = λ _ _ → funExt (λ _ → sym mApply-pure)
-    }
-
   KleisliBasicFunctionalCategory : Type (lsuc ℓ)
-  KleisliBasicFunctionalCategory = BasicFunctionalCategory Kleisli KFF
+  KleisliBasicFunctionalCategory = 
+    BasicFunctionalCategory Kleisli (
+      record
+        { F-ob = λ Z → Z
+        ; F-hom = λ z2y → (λ z → mPure (z2y z))
+        ; F-id = refl
+        ; F-seq = λ _ _ → funExt (λ _ → sym mApply-pure)
+        }
+    )
 
   idempotent-equiv-kleisli-basic-functional-category : 
     KleisliBasicFunctionalCategory ⇔ Idempotent
@@ -876,19 +872,19 @@ of the monad involved and idempotency gives you back `η-eq` for free.
                 in  
                   cong (λ t→mgz → t→mgz tt*) (N-hom η t→mz) ∙ left-eq
               
-              eval : fst (M (F-ob G Z)) → fst (M (M Z))
-              eval = mApply (λ t→mz → mPure (t→mz tt*))
+              mgz→mmz : fst (M (F-ob G Z)) → fst (M (M Z))
+              mgz→mmz = mApply (λ t→mz → mPure (t→mz tt*))
 
               idempotent_lemma : 
                   (z : fst Z) 
-                →   eval (N-ob η Z z) 
+                →   mgz→mmz (N-ob η Z z) 
                   ≡ mPure (mPure z)
               idempotent_lemma z = 
-                eval (N-ob η Z z)
-                  ≡⟨ sym (cong eval mApply-pure) ⟩
-                eval (mApply (N-ob η Z) (mPure z))
-                  ≡⟨ cong eval (eval_lemma (mPure z)) ⟩
-                eval (mPure (λ _ → mPure z))
+                mgz→mmz (N-ob η Z z)
+                  ≡⟨ sym (cong mgz→mmz mApply-pure) ⟩
+                mgz→mmz (mApply (N-ob η Z) (mPure z))
+                  ≡⟨ cong mgz→mmz (eval_lemma (mPure z)) ⟩
+                mgz→mmz (mPure (λ _ → mPure z))
                   ≡⟨ mApply-pure ⟩
                 mPure (mPure z)
                   ∎
@@ -898,11 +894,11 @@ of the monad involved and idempotency gives you back `η-eq` for free.
                 ≡⟨ refl ⟩
               mApply (λ z → mPure (mPure z)) mz
                 ≡⟨ sym (cong (λ k → mApply k mz) (funExt idempotent_lemma)) ⟩
-              mApply (λ z → eval (N-ob η Z z)) mz
+              mApply (λ z → mgz→mmz (N-ob η Z z)) mz
                 ≡⟨ sym mApply-assoc ⟩
-              eval (mApply (N-ob η Z) mz)
-                ≡⟨ cong eval (eval_lemma mz) ⟩
-              eval (mPure (λ _ → mz))
+              mgz→mmz (mApply (N-ob η Z) mz)
+                ≡⟨ cong mgz→mmz (eval_lemma mz) ⟩
+              mgz→mmz (mPure (λ _ → mz))
                 ≡⟨ mApply-pure ⟩
               mPure mz
                 ∎
@@ -965,7 +961,7 @@ of the monad involved and idempotency gives you back `η-eq` for free.
           record 
             { η = record 
                   { N-ob = λ Y y → mPure (λ _ → mPure y)
-                  ; N-hom = λ {Y X} y→mx → funExt (comm y→mx)
+                  ; N-hom = λ y→mx → funExt (comm y→mx)
                   }
             ; η-eq = refl
             }
@@ -988,12 +984,12 @@ We now define `MonadicTerminalTypeSubSingleton`
   open MonadicTerminalTypeSubSingleton
 ```
 
-Now we prove `enforcing-purity-implies-monadic-terminal-type-subsingleton`.
+Now we prove `is-pure-implies-monadic-terminal-type-subsingleton`.
 
 The `proof` below is a proof of exceptional beauty!
 
 Starting with an arbitrary monadic computation `mt` of type `fst (M T)`: equational reasoning forces
-it to collapse to a single canonical value: `mPure tt*`.
+it to be equal to a single canonical computation: `mPure tt*`.
 
 I am not sure who proved it originally.
 
@@ -1001,24 +997,10 @@ F. William Lawvere and Ernest Manes have certainly contributed to setting the sc
 that it was Francis Borceux who first presented the equational proof formalized below in his book.
 
 ```agda
-  enforcing-purity-implies-monadic-terminal-type-subsingleton : 
-      EnforcingPurity → MonadicTerminalTypeSubSingleton
-  enforcing-purity-implies-monadic-terminal-type-subsingleton ep = record
-    { monadic-terminal-type-sub-singleton = proof }
-
-    where
-
-      MT = M T
-      MMT = M MT
-
-      mmt→mt : fst MMT → fst MT
-      mmt→mt = mApply (λ (_ : fst MT) → mPure tt*)
-
-      proof : 
-        ∀ (mt : fst (M T)) 
-        →   mt 
-          ≡ mPure tt*
-      proof mt =
+  is-pure-implies-monadic-terminal-type-subsingleton : 
+      IsPure → MonadicTerminalTypeSubSingleton
+  is-pure-implies-monadic-terminal-type-subsingleton ep = record
+    { monadic-terminal-type-sub-singleton = λ mt →
         mt
           ≡⟨ sym mPure-mApply ⟩
         mApply mPure mt
@@ -1032,18 +1014,23 @@ that it was Francis Borceux who first presented the equational proof formalized 
         mmt→mt (mPure mt)
           ≡⟨ mApply-pure ⟩
         mPure tt*
-          ∎
+          ∎  
+    }
+
+    where
+
+      mmt→mt = mApply (λ _ → mPure tt*)
 ```
 
 ## Examples
 
 Here are some concrete examples.
 
-They use `examplesMonad` in order to disambiguate from `hSetMonad`.
+They use `eMonad` in order to disambiguate from `hSetMonad`.
 
 We could have used `hSetMonad` but then thinks would become more complex.
 
-For the purpose of the examples below, `examplesMonad` is an appropriate pragmatic choice.
+For the purpose of the examples below, `eMonad` is an appropriate pragmatic choice.
 
 ```agda
 
@@ -1058,7 +1045,7 @@ private
   variable
     ℓ : Level
 
-record examplesMonad 
+record eMonad 
     {ℓ : Level}
     (M : Type ℓ → Type ℓ) : 
   Type (lsuc ℓ) where
@@ -1067,14 +1054,14 @@ record examplesMonad
     pure : ∀ {Z : Type ℓ} → Z → M Z
     _>>=_ : ∀ {Z Y : Type ℓ} → M Z → (Z → M Y) → M Y
 
-open examplesMonad {{...}}
+open eMonad {{...}}
 
-EnforcingPurityEq : 
+IsPure : 
   ∀ {ℓ}
     (M : Type ℓ → Type ℓ)
-    ⦃ _ : examplesMonad M ⦄
+    ⦃ _ : eMonad M ⦄
   → Type (lsuc ℓ)
-EnforcingPurityEq {ℓ} M = 
+IsPure {ℓ} M = 
   ∀ {Z : Type ℓ} (mz : M Z) 
   →   mz >>= (pure ∘ pure)
     ≡ pure mz
@@ -1085,7 +1072,7 @@ SubSingleton A = (z y : A) → z ≡ y
 instance
   MaybeMonad : 
     ∀ {ℓ}
-    → examplesMonad {ℓ} Maybe
+    → eMonad {ℓ} Maybe
   MaybeMonad = record
     { pure = just
     ; _>>=_ = λ { nothing _ → nothing ; (just z) z→my → z→my z }
@@ -1093,7 +1080,7 @@ instance
 
 maybe-not-pure : 
   ∀ {ℓ}
-  → ¬ EnforcingPurityEq {ℓ} Maybe
+  → ¬ IsPure {ℓ} Maybe
 maybe-not-pure {ℓ} h =
   let T = Lift ℓ Unit
   in contradiction-from (h nothing)
@@ -1103,7 +1090,8 @@ maybe-not-pure {ℓ} h =
     T = Lift ℓ Unit
     contradiction-from : 
         nothing 
-      ≡ just nothing → ⊥
+      ≡ just nothing
+      → ⊥
     contradiction-from p = transport (λ i → P (p i)) tt*
 
       where
@@ -1115,7 +1103,7 @@ maybe-not-pure {ℓ} h =
 instance
   ListMonad : 
     ∀ {ℓ}
-    → examplesMonad {ℓ} List
+    → eMonad {ℓ} List
   ListMonad = record
     { pure = λ z → z ∷ []
     ; _>>=_ = λ zs z→my → concatMap z→my zs
@@ -1123,7 +1111,7 @@ instance
 
 list-not-pure : 
   ∀ {ℓ} 
-  → ¬ EnforcingPurityEq {ℓ} List
+  → ¬ IsPure {ℓ} List
 list-not-pure {ℓ} h =
   let T = Lift ℓ Unit
   in contradiction-from (h (tt* ∷ tt* ∷ []))
@@ -1132,7 +1120,9 @@ list-not-pure {ℓ} h =
 
     T = Lift ℓ Unit
     contradiction-from : 
-      (tt* ∷ []) ∷ (tt* ∷ []) ∷ []  ≡ (tt* ∷ tt* ∷ []) ∷ [] → ⊥
+        (tt* ∷ []) ∷ (tt* ∷ []) ∷ []
+      ≡ (tt* ∷ tt* ∷ []) ∷ []
+      → ⊥
     contradiction-from p = transport (λ i → P (p i)) tt*
 
       where
@@ -1148,7 +1138,7 @@ instance
   ReadMonad : 
     ∀ {ℓ} 
       {R : Type ℓ}
-    → examplesMonad (Read R)
+    → eMonad (Read R)
   ReadMonad = record
     { pure = λ z _ → z
     ; _>>=_ = λ m z→ry r → z→ry (m r) r
@@ -1157,7 +1147,7 @@ instance
 read-purity-implies : 
   ∀ {ℓ}
     (R : Type ℓ) 
-  → EnforcingPurityEq (Read R) → SubSingleton R
+  → IsPure (Read R) → SubSingleton R
 read-purity-implies R h r1 r2 =
   cong (λ _op_ → r1 op r2) (h id)
 
@@ -1177,7 +1167,7 @@ instance
     ∀ {ℓ} 
       {W : Type ℓ} 
       ⦃ _ : Monoid W ⦄
-    → examplesMonad (Write W)
+    → eMonad (Write W)
   WriteMonad = record
     { pure = λ z → (z , e)
     ; _>>=_ = λ mz z→wy → let (y , w) = z→wy (fst mz) in (y , snd mz ⦾ w)
@@ -1187,14 +1177,10 @@ write-purity-implies :
   ∀ {ℓ} 
     (W : Type ℓ)
     ⦃ _ : Monoid W ⦄
-  → EnforcingPurityEq (Write W) → SubSingleton W
+  → IsPure (Write W) → SubSingleton W
 write-purity-implies W h w1 w2 =
-  equalToNeutral w1 ∙ sym (equalToNeutral w2)
-
-  where
-
-    equalToNeutral : ∀ w → w ≡ e
-    equalToNeutral w = sym (cong snd (cong fst (h (e , w))))
+    sym (cong snd (cong fst (h (e , w1)))) 
+  ∙ cong snd (cong fst (h (e , w2)))
 
 State : ∀ {ℓ} → Type ℓ → Type ℓ → Type ℓ
 State S Z = S → Z × S
@@ -1203,7 +1189,7 @@ instance
   StateMonad : 
     ∀ {ℓ} 
       {S : Type ℓ}
-    → examplesMonad (State S)
+    → eMonad (State S)
   StateMonad = record
     { pure = λ z s → (z , s)
     ; _>>=_ = λ mz z→sy s → let (z , s') = mz s in z→sy z s'
@@ -1212,9 +1198,10 @@ instance
 state-purity-implies : 
   ∀ {ℓ} 
     (S : Type ℓ)
-  → EnforcingPurityEq (State S) → SubSingleton S
+  → IsPure (State S) → SubSingleton S
 state-purity-implies S h s1 s2 =
-  cong (λ m → fst (m s2)) (cong (λ mm → fst (mm s1)) (h (λ s → (s , s))))
+  cong (λ m → fst (m s2))
+    (cong (λ mm → fst (mm s1)) (h (λ s → (s , s))))
 
 Cont : ∀ {ℓ} → Type ℓ → Type ℓ → Type ℓ
 Cont R Z = (Z → R) → R
@@ -1223,7 +1210,7 @@ instance
   ContMonad : 
     ∀ {ℓ}
       {R : Type ℓ}
-    → examplesMonad (Cont R)
+    → eMonad (Cont R)
   ContMonad = record
     { pure = λ z k → k z
     ; _>>=_ = λ mz z→my k → mz (λ z → z→my z k)
@@ -1232,11 +1219,9 @@ instance
 cont-purity-implies : 
   ∀ {ℓ} 
     (R : Type ℓ) 
-  → EnforcingPurityEq (Cont R) → SubSingleton R
+  → IsPure (Cont R) → SubSingleton R
 cont-purity-implies R h r1 r2 =
-  let m1 : Cont R R
-      m1 = λ _ → r1
-  in cong (λ mm → mm (λ _ → r2)) (h m1)
+  cong (λ mm → mm (λ (_ : (R → R) → R) → r2)) (h (λ _ → r1))
 
 -- `IO` simulated as `ErrorState`
 ErrorState : ∀ {ℓ} → Type ℓ → Type ℓ → Type ℓ → Type ℓ
@@ -1245,7 +1230,7 @@ ErrorState E S Z = S → (E × S) ⊎ (Z × S)
 instance
   ErrorStateMonad : 
     ∀ {ℓ} {E S : Type ℓ} 
-    → examplesMonad (ErrorState E S)
+    → eMonad (ErrorState E S)
   ErrorStateMonad {ℓ} {E} {S} = record
     { pure = λ z s → inr (z , s)
     ; _>>=_ = bind
@@ -1272,7 +1257,7 @@ instance
 
 io-not-pure : 
   ∀ {ℓ} {E S : Type ℓ} (e : E) (s : S) 
-  → ¬ EnforcingPurityEq (ErrorState E S)
+  → ¬ IsPure (ErrorState E S)
 io-not-pure {ℓ} {E} {S} e s h =
   let m = λ s → inl (e , s)
   in contradiction-from (cong (λ mm → mm s) (h m))
@@ -1293,7 +1278,7 @@ io-not-pure {ℓ} {E} {S} e s h =
 
 ## Purity, Subsingletons, and the Role of CoEndoYoneda
 
-The theorem `enforcing-purity-implies-monadic-terminal-type-subsingleton` offers a remarkable
+The theorem `is-pure-implies-monadic-terminal-type-subsingleton` offers a remarkable
 diagnostic insight into categorical functional programming.
 
 The subsingleton condition eliminates many classic impure computational effects:
@@ -1313,7 +1298,7 @@ The subsingleton condition eliminates many classic impure computational effects:
 ### The Subtlety of `Reader`
 
 Yet this diagnostic test reveals a profound mathematical subtlety:
-`Reader R` passes the subsingleton condition elimination! 
+`Reader R` passes the subsingleton elimination! 
 
 It is, afaik, the only classic effect that survives this elimination, because querying an
 environment does not alter the uniqueness of computing a terminal result.
@@ -1321,6 +1306,6 @@ environment does not alter the uniqueness of computing a terminal result.
 This is precisely where the `BasicFunctionalCategory` law `η-eq-T` proves essential: it provides
 the pointfree structural characterization of purity capable of distinguishing truly pure computation
 from environment and context passing (which is also not truly pure computation although it survives
-the subsingleton filter above).
+the subsingleton elimination above).
 
 Thanks for listening.

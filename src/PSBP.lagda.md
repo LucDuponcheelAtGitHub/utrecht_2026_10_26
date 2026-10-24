@@ -52,7 +52,9 @@ thisIsNotAProgram =
 This is a program specification, a formal program description.
 
 Nevertheless, "by abuse of language", I will use "program" instead of "program specification" and I
-will use "code" for the more general notion (something written in a programming language).
+will use "code" for something text written in a programming language.
+
+Any idea what the program may model?
 
 `thisIsNotAProgram` uses a runtime environment.
 
@@ -60,7 +62,7 @@ The runtime environment starts with an argument `a`, continues with a pair `(a, 
 intermediate result is added to it as a value `v`, and ends with a triple `((a, v), r)`, where the
 final result `r` is added to it. 
 
-Notice that intermediate results are not discarded as is done with a runtime stack.
+Notice that intermediate results, cfr. `LET p IN q` are not discarded as is done with `p >>> q`.
 
 `PSBP` enables you to do positional programming, pointful programming in a pointfree way, replacing
 names, like `a`, `v` and `r`, by their positions in the environment and using combinations of the
@@ -413,14 +415,21 @@ fibonacci =
 
 Notice that we could have used a `LET_IN_` instead of `_\×/_` and we could have used
 `_/+\_` instead of `IF_THEN_ELSE_`. It is all about *elegance* of code rather than
-*power of expression* of code. Of course, elegance is a subjective notion.
+*power of expression* of code. 
+
+Of course, elegance is a subjective notion.
+
+`LET`, `IN`, `IF`, `THEN` and `ELSE` are, maybe, more elegant for computer scientists
+(they can be thought of as library level keywords).
+
+`>>>`, `_/+\_` and `\×/` are, maybe, more elegant for mathematicians.
 
 ## Parallelism
 
 As far as their types are concerned sequential products and parallel products do not differ.
 
 Parallelism could be considered to be an implementation choice, but we consider it to be a
-specification decision.
+specification decision, allowing for an hybrid approach.
 
 ```agda
 record WithPar 
@@ -503,6 +512,10 @@ Below are two (commented out) alternative ways to define the `ELSE` part of `par
 I can show `fibonacci` and `parallelFibonacci` at runtime. 
 
 Using `htop` one can see that the latter uses all available processing capabilities.
+
+The implementation of `_||×||_` uses the Drama actor library.
+
+Parallel programming directly with actors is notoriously hard. 
 
 Thanks for listening!
 
